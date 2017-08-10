@@ -734,6 +734,16 @@ PropagatorJob::JobParallelism PropagatorCompositeJob::parallelism()
     return FullParallelism;
 }
 
+void PropagatorCompositeJob::slotSubJobAbortFinished()
+{
+    // Count that job has been finished
+    _abortsCount--;
+
+    // Emit abort if last job has been aborted
+    if (_abortsCount == 0) {
+        emit abortFinished();
+    }
+}
 
 bool PropagatorCompositeJob::scheduleSelfOrChild()
 {
@@ -891,7 +901,8 @@ void PropagateDirectory::slotFirstJobFinished(SyncFileItem::Status status)
 
     if (status != SyncFileItem::Success && status != SyncFileItem::Restoration) {
         if (_state != Finished) {
-            abort();
+            // Synchronously abort
+            abort(AbortType::Synchronous);
             _state = Finished;
             emit finished(status);
         }
