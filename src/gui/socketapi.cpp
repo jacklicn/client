@@ -544,8 +544,8 @@ QUrl SocketApi::getPrivateLinkUrl(const QString &localFile) const
     const QString localFileClean = QDir::cleanPath(localFile);
     const QString file = localFileClean.mid(shareFolder->cleanPath().length() + 1);
 
-    SyncJournalFileRecord rec = shareFolder->journalDb()->getFileRecord(file);
-    if (rec.isValid()) {
+    SyncJournalFileRecord rec;
+    if (shareFolder->journalDb()->getFileRecord(file, &rec) && rec.isValid()) {
         return shareFolder->accountState()->account()->filePermalinkUrl(rec.numericFileId());
     }
     return QUrl();
