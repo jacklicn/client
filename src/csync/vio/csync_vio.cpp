@@ -30,7 +30,6 @@
 #include "csync_util.h"
 #include "vio/csync_vio.h"
 #include "vio/csync_vio_local.h"
-#include "csync_statedb.h"
 #include "common/c_jhash.h"
 
 #define CSYNC_LOG_CATEGORY_NAME "csync.vio.main"
