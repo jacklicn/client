@@ -43,7 +43,7 @@ public:
      */
     SyncFileItem toSyncFileItem();
 
-    bool isValid()
+    bool isValid() const
     {
         return !_path.isEmpty();
     }
