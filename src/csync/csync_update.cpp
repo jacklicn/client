@@ -47,6 +47,8 @@
 #include "csync_log.h"
 #include "csync_rename.h"
 
+#include "common/utility.h"
+
 // Needed for PRIu64 on MinGW in C++ mode.
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -408,6 +410,16 @@ out:
           }
       }
   }
+
+  // If conflict files are uploaded, they won't be marked as IGNORE / CSYNC_FILE_EXCLUDE_CONFLICT
+  // but we still want them marked!
+  static bool uploadConflictFiles = qgetenv("OWNCLOUD_UPLOAD_CONFLICT_FILES").toInt() != 0;
+  if (uploadConflictFiles) {
+      if (OCC::Utility::isConflictFile(path)) {
+          st->error_status = CSYNC_STATUS_INDIVIDUAL_IS_CONFLICT_FILE;
+      }
+  }
+
   if (st->instruction != CSYNC_INSTRUCTION_NONE
       && st->instruction != CSYNC_INSTRUCTION_IGNORE
       && st->instruction != CSYNC_INSTRUCTION_UPDATE_METADATA

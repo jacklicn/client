@@ -175,6 +175,12 @@ namespace Utility {
     /**  Returns a new settings pre-set in a specific group.  The Settings will be created
          with the given parent. If no parent is specified, the caller must destroy the settings */
     OCSYNC_EXPORT std::unique_ptr<QSettings> settingsWithGroup(const QString &group, QObject *parent = 0);
+
+    /** Returns whether a file name indicates a conflict file
+     *
+     * See FileSystem::makeConflictFileName.
+     */
+    OCSYNC_EXPORT bool isConflictFile(const QByteArray &name);
 }
 /** @} */ // \addtogroup
 

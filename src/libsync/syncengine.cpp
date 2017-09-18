@@ -450,6 +450,8 @@ int SyncEngine::treewalkFile(csync_file_stat_t *file, csync_file_stat_t *other, 
         _seenFiles.insert(renameTarget);
     }
 
+    static bool uploadConflictFiles = qgetenv("OWNCLOUD_UPLOAD_CONFLICT_FILES").toInt() != 0;
+
     switch (file->error_status) {
     case CSYNC_STATUS_OK:
         break;
@@ -492,7 +494,17 @@ int SyncEngine::treewalkFile(csync_file_stat_t *file, csync_file_stat_t *other, 
         break;
     case CSYNC_STATUS_INDIVIDUAL_IS_CONFLICT_FILE:
         item->_status = SyncFileItem::Conflict;
-        item->_errorString = tr("Conflict: Server version downloaded, local copy renamed and not uploaded.");
+        if (uploadConflictFiles) {
+            // For uploaded conflict files, files with no action performed on them should
+            // be displayed: but we mustn't overwrite the instruction if something happens
+            // to the file!
+            if (remote && item->_instruction == CSYNC_INSTRUCTION_NONE) {
+                item->_errorString = tr("Unresolved conflict.");
+                item->_instruction = CSYNC_INSTRUCTION_IGNORE;
+            }
+        } else {
+            item->_errorString = tr("Conflict: Server version downloaded, local copy renamed and not uploaded.");
+        }
         break;
     case CYSNC_STATUS_FILE_LOCKED_OR_OPEN:
         item->_errorString = QLatin1String("File locked"); // don't translate, internal use!
@@ -561,6 +573,12 @@ int SyncEngine::treewalkFile(csync_file_stat_t *file, csync_file_stat_t *other, 
         // Any files that are instruction NONE?
         if (!isDirectory && (!other || other->instruction == CSYNC_INSTRUCTION_NONE)) {
             _hasNoneFiles = true;
+        }
+        // Put none-instruction conflict files into the syncfileitem list
+        if (uploadConflictFiles
+            && file->error_status == CSYNC_STATUS_INDIVIDUAL_IS_CONFLICT_FILE
+            && item->_instruction == CSYNC_INSTRUCTION_IGNORE) {
+            break;
         }
         // No syncing or update to be done.
         return re;

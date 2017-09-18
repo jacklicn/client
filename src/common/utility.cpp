@@ -545,4 +545,30 @@ QUrl Utility::concatUrlPath(const QUrl &url, const QString &concatPath,
     return tmpUrl;
 }
 
+bool Utility::isConflictFile(const QByteArray &name)
+{
+    auto bname = name.mid(name.lastIndexOf('/'));
+    if (bname.indexOf("_conflict-") != -1)
+        return true;
+
+    static bool uploadConflictFiles = qgetenv("OWNCLOUD_UPLOAD_CONFLICT_FILES").toInt() != 0;
+    if (uploadConflictFiles) {
+        // For uploads, we want to consider files with any kind of username tag
+        // as conflict files. (pattern *_conflict_*-)
+        int idx = bname.indexOf("_conflict_");
+        if (idx != -1 && bname.indexOf('-', idx))
+            return true;
+    } else {
+        // Old behavior: optionally, files with the specific string in the env variable
+        // appended are also considered conflict files.
+        static auto conflictFileUsername = qgetenv("CSYNC_CONFLICT_FILE_USERNAME");
+        static auto usernameConflictId = "_conflict_" + conflictFileUsername + "-";
+        if (!conflictFileUsername.isEmpty() && bname.indexOf(usernameConflictId) != -1) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 } // namespace OCC
